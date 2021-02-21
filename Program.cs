@@ -52,8 +52,11 @@ namespace KeggleTaskLinq
 
             }
             
-            Console.WriteLine($"Всего различных городов: {weatherEvents.Select(x => x.City).ToList().Count()}");
-           
+            Console.WriteLine($"Всего различных городов: {weatherEvents.Select(x => x.City).Distinct().Count()}");
+            List<DateTime> date = new List<DateTime>() { Convert.ToDateTime("05/01/2016"), Convert.ToDateTime("05/01/2017"), Convert.ToDateTime("05/01/2018"), Convert.ToDateTime("05/01/2019"), Convert.ToDateTime("05/01/2020") };
+            date.ForEach(x =>
+               Console.WriteLine($"{x} - {weatherEvents.Where(y => y.StartTime.Year == x.Year).Count()}")
+           );
             /*-1.Вывести количество зафиксированных природных явлений в Америке в 2018 году
             
             0.Вывести количество штатов, количество городов в датасете  
@@ -69,9 +72,8 @@ namespace KeggleTaskLinq
 
             var cities = weatherEvents.Where(x => (x.StartTime.Year == 2019) && (x.Type == WeatherEventType.Rain)).Select(x => x.City).ToList();
             cities.Distinct()
-                .OrderBy(x => -cities.Where(y => y == x).Count())
                 .Take(3).ToList()
-                .ForEach(x => Console.WriteLine($"{x} - {cities.Where(y => y == x).Count()}"));
+                .ForEach(x => Console.WriteLine($"{x.ToString()} - {cities.Where(y => y == x).Count()}"));
 
         }
 
