@@ -51,30 +51,85 @@ namespace KeggleTaskLinq
                 }
 
             }
-            
-            Console.WriteLine($"Всего различных городов: {weatherEvents.Select(x => x.City).Distinct().Count()}");
-            List<DateTime> date = new List<DateTime>() { Convert.ToDateTime("05/01/2016"), Convert.ToDateTime("05/01/2017"), Convert.ToDateTime("05/01/2018"), Convert.ToDateTime("05/01/2019"), Convert.ToDateTime("05/01/2020") };
+            // 1.1
+            var first1 = weatherEvents.Select(x => x.City).Distinct().Count();
+            Console.WriteLine($"Всего различных городов: {first1}");
+            // 1.2
+            var first2 = from i in weatherEvents
+                         group i by i.City;
+            Console.WriteLine($"Всего различных городов: {first2.Count()}");
+            // 2.1
+            List < DateTime > date = new List<DateTime>() { Convert.ToDateTime("05/01/2016"), Convert.ToDateTime("05/01/2017"), Convert.ToDateTime("05/01/2018"), Convert.ToDateTime("05/01/2019"), Convert.ToDateTime("05/01/2020") };
             date.ForEach(x =>
-               Console.WriteLine($"{x} - {weatherEvents.Where(y => y.StartTime.Year == x.Year).Count()}")
+               Console.WriteLine($"{x.Year} - {weatherEvents.Where(y => y.StartTime.Year == x.Year).Count()}")
            );
+
+            // 2.2
+            var second = from i in weatherEvents
+                         group i by i.StartTime.Year into g
+                         select new { Name = g.Key, Count = g.Count() };
+
+            foreach (var group in second)
+                Console.WriteLine($"{group.Name} : {group.Count}");
             /*-1.Вывести количество зафиксированных природных явлений в Америке в 2018 году
             
             0.Вывести количество штатов, количество городов в датасете  
             1.Вывести топ 3 самых дождливых города в 2019 году в порядке убывания количества дождей(вывести город и количество дождей)
             2.Вывести данные самых долгих(топ - 1) снегопадов в Америке по годам(за каждый из годов) - с какого времени, по какое время, в каком городе
             */
-            var s = from i in weatherEvents
-                    where i.Severity != Severity.Unknown
-                    select i;
+
+            // 3.1
+            var third = from i in weatherEvents
+                    where i.Severity != Severity.Unknown 
+                    && i.StartTime.Year == 2018 
+                    && i.Type != WeatherEventType.Unknown
+                    select i.Type;
+            Console.WriteLine($"Кол-во природных явлений {third.Distinct().Count()}");
+            // 3.2
             Console.WriteLine($"Кол-во природных явлений {weatherEvents.Where(x => x.StartTime.Year == 2018 && x.Type!=WeatherEventType.Unknown).Select(x=>x.Type).Distinct().Count()}");
 
-            Console.WriteLine($"Кол-во штатов: {weatherEvents.Select(x => x.ZipCode).Distinct().Count()} городов: {weatherEvents.Select(x => x.City).Distinct().Count()}");
+            // 4.1
+            Console.WriteLine($"Кол-во штатов: {weatherEvents.Select(x => x.City).Distinct().Count()} городов: {weatherEvents.Select(x => x.ZipCode).Distinct().Count()}");
 
-            var cities = weatherEvents.Where(x => (x.StartTime.Year == 2019) && (x.Type == WeatherEventType.Rain)).Select(x => x.City).ToList();
+            // 4.2
+
+            var states = from i in weatherEvents
+                         group i by i.Country;
+            var city = from i in weatherEvents
+                       group i by i.ZipCode;
+            Console.WriteLine($"Кол-во штатов: {states.Count()} городов: {city.Count()}");
+
+            // 5.1
+
+            var rainyCities = from i in weatherEvents
+                              where i.Type == WeatherEventType.Rain
+                              && i.StartTime.Year == 2019
+                              group i by i.City into g
+                              select new { Key = g.Key, Count = g.Count() };
+            rainyCities.Take(3).OrderBy(x => x.Count).ToList().ForEach(x => Console.WriteLine($"{x.Key} - {x.Count}"));
+
+            // 5.2
+
+            weatherEvents.Where(x => (x.StartTime.Year == 2019) && (x.Type == WeatherEventType.Rain)).GroupBy(x=>x.City).Take(3).Select(x=>new { Key =x.Key, Count = x.Count() }).OrderBy(x=>x.Count).ToList().ForEach(x => Console.WriteLine($"{x.Key} - {x.Count}"));
+            /*
+            var cities = weatherEvents.Where(x => (x.StartTime.Year == 2019) &&  (x.Type == WeatherEventType.Rain)).Select(x => x).ToList();
             cities.Distinct()
+                .OrderBy(x => -cities.Where(y => y == x).Count())
                 .Take(3).ToList()
-                .ForEach(x => Console.WriteLine($"{x.ToString()} - {cities.Where(y => y == x).Count()}"));
+                .ForEach(x => Console.WriteLine($"{x} - {cities.Where(y => y == x).Count()}"));*/
 
+            // 6.1
+
+            var d = weatherEvents.Where(x => x.Type == WeatherEventType.Snow)
+                .OrderBy(x => -(x.EndTime - x.StartTime))
+                .ToList();
+
+            Enumerable.Range(2016, 2020).ToList().ForEach(x =>
+            {
+                d.Where(y => y.StartTime.Year == x)
+                    .Take(1).ToList()
+                    .ForEach(m => Console.WriteLine($"{x} | {m.City}: {m.StartTime} - {m.EndTime}"));
+            });
         }
 
         //Дополнить модеь, согласно данным из файла
